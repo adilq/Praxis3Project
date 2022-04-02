@@ -60,6 +60,7 @@ while(1):
         "Lon Google" : x.Lon_Google,
         "Lat Google" : x.Lat_Google
         }
+        
     print ('Time %d: %d : %d'%(x.Time_H,x.Time_M,x.Time_S))
     print ('Lon = %f  Lat = %f'%(x.Lon,x.Lat))
     x.L76X_Baidu_Coordinates(x.Lat, x.Lon)
