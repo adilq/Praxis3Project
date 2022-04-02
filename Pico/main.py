@@ -43,13 +43,9 @@ x.L76X_Send_Command(x.SET_SYNC_PPS_NMEA_ON)
 
 while(1):
     x.L76X_Gat_GNRMC()
-    if(x.Status == 1):
-        print ('Already positioned')
-        x.config.send_to_nano(str(x.Lon) + str(x.Lat))
-    else:
-        print ('No positioning')
-    
+
     data = {
+        "Status" : x.Status,
         "Time_H" : x.Time_H,
         "Time_M" : x.Time_M,
         "Time_S" : x.Time_S,
@@ -60,13 +56,18 @@ while(1):
         "Lon Google" : x.Lon_Google,
         "Lat Google" : x.Lat_Google
         }
-        
-    print ('Time %d: %d : %d'%(x.Time_H,x.Time_M,x.Time_S))
-    print ('Lon = %f  Lat = %f'%(x.Lon,x.Lat))
-    x.L76X_Baidu_Coordinates(x.Lat, x.Lon)
-    print ('Baidu coordinate %f ,%f'%(x.Lat_Baidu,x.Lon_Baidu))
-    x.L76X_Google_Coordinates(x.Lat,x.Lon)
-    print ('Google coordinate %f ,%f'%(x.Lon_Google,x.Lat_Google))
+    
+    if(x.Status == 1):
+        print ('Already positioned')
+    else:
+        print ('No positioning')
+    
+    # print ('Time %d: %d : %d'%(x.Time_H,x.Time_M,x.Time_S))
+    # print ('Lon = %f  Lat = %f'%(x.Lon,x.Lat))
+    # x.L76X_Baidu_Coordinates(x.Lat, x.Lon)
+    # print ('Baidu coordinate %f ,%f'%(x.Lat_Baidu,x.Lon_Baidu))
+    # x.L76X_Google_Coordinates(x.Lat,x.Lon)
+    # print ('Google coordinate %f ,%f'%(x.Lon_Google,x.Lat_Google))
     x.config.send_to_nano(data)
     time.sleep(5)
 

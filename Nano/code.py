@@ -38,6 +38,17 @@ def check_button_state(state, lastState):
     lastState = state
     return was_pressed
 
+#flash both rapidly unitl button is pressed
+def flash_leds():
+    while True:
+        was_pressed = check_button_state(button.value, lastState)
+        if was_pressed:
+            return
+        else:
+            green_led.value = not green_led.value
+            onboard_led.value = not onboard_led.value
+            time.sleep(0.05)
+
 #main loop
 while True:
     data = uart.read()  # read up to 32 bytes
@@ -45,16 +56,23 @@ while True:
     was_pressed = check_button_state(button_state, lastState)
     # print(data)  # this is a bytearray type
 
-    if data is not None:
+    if data != b'\x00' and data is not None:
         onboard_led.value = True
-        #make a new DataPacket object; append it to list
+        #make a new DataPacket object and convert back to dictionary
         pack = DataPacket.Packet(data)
         pack.convert()
-        push.append(pack)
+
+        #if there is a position, append data to list. If its the first time, flash both LEDs so that we can see
+        if (pack.data["Status"] == 1) and (len(push) == 0):
+            flash_leds()
+            push.append(pack)
+        elif (pack.data["Status"] == 1):
+            push.append(pack)
+        
         print(pack.data)
         onboard_led.value = False
     else:
-        green_led.value = True
+        green_led.value = True        
 
     #sending data over wifi
     if was_pressed:
