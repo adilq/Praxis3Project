@@ -7,8 +7,8 @@ import storage
 import time
 
 # Setup Spi pins
-SD_CS = board.D10
-spi = busio.SPI(board.SCK, board.MOSI, board.MISO)
+SD_CS = board.GP13
+spi = busio.SPI(board.GP10, board.GP11, board.GP12)
 cs = digitalio.DigitalInOut(SD_CS)
 
 # Connect to card and mount filesytem
@@ -55,7 +55,7 @@ print_directory("/sd")
 
 # Write GPS data
 print("Logging GPS data to filesystem")
-
+'''
 # Create GPS file
 with open("/sd/GPS.txt", "w") as f:
     f.write("Coordinates:\n")
@@ -71,7 +71,7 @@ while True:
         led.value = False  # turn off LED to indicate we're done
     # file is saved
     time.sleep(1)
-
+'''
 '''
 # Write new data to file (erase and write new data)
 with open("/sd/test.txt", "w") as f:

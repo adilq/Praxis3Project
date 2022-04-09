@@ -1,10 +1,11 @@
-
 import busio
 import board
 import digitalio
 import time
 import mqtt_publish
 import DataPacket
+
+#connection = mqtt_publish.Connection() #this is an object (see mqtt_publish.py)
 
 #establish UART btwn Pico/GPS and Nano
 uart = busio.UART(board.TX, board.RX)
@@ -20,22 +21,25 @@ button = digitalio.DigitalInOut(board.D3)
 button.direction = digitalio.Direction.INPUT
 button.pull = digitalio.Pull.UP
 
-#establish connection with mqtt broker
-connection = mqtt_publish.Connection() #this is an object (see mqtt_publish.py)
-
 #list of data packet objects
 push = []
-lastState = True
 
-def check_button_state(state, lastState):
-    '''check the state of the button'''
+def check_button_state(state):
+    '''#check the state of the button
+    '''
+
     was_pressed = False
-    if (state != lastState) and (state == False):
+    if (state == False):
         #the button has been pressed
+        for i in range(0, 5):
+            green_led.value = not green_led.value
+            time.sleep(0.15)
+
         while button.value == False:
-            pass
+            print('I am pressed')
+            time.sleep(0.1)
+        print('peepeepoopooman')
         was_pressed = True
-    lastState = state
     return was_pressed
 
 #flash both rapidly unitl button is pressed
@@ -53,8 +57,8 @@ def flash_leds():
 while True:
     data = uart.read()  # read up to 32 bytes
     button_state = button.value
-    was_pressed = check_button_state(button_state, lastState)
-    # print(data)  # this is a bytearray type
+    was_pressed = check_button_state(button_state)
+    print(was_pressed)  # this is a bytearray type
 
     if data != b'\x00' and data is not None:
         onboard_led.value = True
@@ -68,19 +72,26 @@ while True:
             push.append(pack)
         elif (pack.data["Status"] == 1):
             push.append(pack)
-        
+
         print(pack.data)
         onboard_led.value = False
     else:
-        green_led.value = True        
+        green_led.value = not green_led.value
 
     #sending data over wifi
     if was_pressed:
+        #establish connection with mqtt broker
+        connection = mqtt_publish.Connection() #this is an object (see mqtt_publish.py)
+        onboard_led.value = True
+        green_led.value = False
+        time.sleep(0.05)
+        onboard_led.value = False
+        green_led.value = True
+        time.sleep(0.05)
         green_led.value = False
         for packet in push:
             if not packet.sent:
                 onboard_led.value = not onboard_led.value #flash the led
                 msg = str(packet.data)
-                connection.mqtt_client.publish(connection.mqtt_topic, msg)
                 packet.update_sent()
         onboard_led.value = False
