@@ -31,34 +31,30 @@ def check_button_state(state):
     was_pressed = False
     if (state == False):
         #the button has been pressed
-        for i in range(0, 5):
+        for i in range(0, 10):
             green_led.value = not green_led.value
             time.sleep(0.15)
 
         while button.value == False:
             print('I am pressed')
             time.sleep(0.1)
-        print('peepeepoopooman')
+        print('no longer pressed')
         was_pressed = True
     return was_pressed
 
 #flash both rapidly unitl button is pressed
 def flash_leds():
-    while True:
-        was_pressed = check_button_state(button.value, lastState)
-        if was_pressed:
-            return
-        else:
-            green_led.value = not green_led.value
-            onboard_led.value = not onboard_led.value
-            time.sleep(0.05)
+    while check_button_state(button.value) == False:
+        green_led.value = not green_led.value
+        onboard_led.value = not onboard_led.value
+        time.sleep(0.05)
+    return
 
 #main loop
 while True:
-    data = uart.read()  # read up to 32 bytes
+    data = uart.read()  #read data from Pico
     button_state = button.value
     was_pressed = check_button_state(button_state)
-    print(was_pressed)  # this is a bytearray type
 
     if data != b'\x00' and data is not None:
         onboard_led.value = True
@@ -68,7 +64,7 @@ while True:
 
         #if there is a position, append data to list. If its the first time, flash both LEDs so that we can see
         if (pack.data["Status"] == 1) and (len(push) == 0):
-            flash_leds()
+            #flash_leds()
             push.append(pack)
         elif (pack.data["Status"] == 1):
             push.append(pack)
