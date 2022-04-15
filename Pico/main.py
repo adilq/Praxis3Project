@@ -5,21 +5,6 @@ import l76x
 import time
 import math
 
-'''
-uart_print = UART(0,baudrate=9600,tx=Pin(0),rx=Pin(1))
-#uart_print = UART(1,baudrate=9600,tx=Pin(4),rx=Pin(5))
-StandBy = Pin(17,Pin.OUT)
-StandBy.value(0)
-ForceOn = Pin(14,Pin.OUT)
-ForceOn.value(0)
-rxData = bytes()
-
-while True:
-    while uart_print.any() > 0:
-        rxData += uart_print.read(1)
-    print(rxData.decode('utf-8'))
-'''
-
 x=l76x.L76X()
 x.L76X_Set_Baudrate(9600)
 
@@ -40,34 +25,48 @@ x.L76X_Send_Command(x.SET_SYNC_PPS_NMEA_ON)
 #time.sleep(10)
 #x.L76X_Send_Command(x.SET_NORMAL_MODE)
 #x.config.StandBy.value(1)
-
+read = 0
+prev_sent = 0
 while(1):
-    x.L76X_Gat_GNRMC()
+    
+    #check if there is something to be read
+    read = x.config.read_from_nano()
+    print(read)
+    time.sleep(3)
+    #see if nano is saying stop
+    if (read) and (read.decode('utf-8') =='STOP'):
+        print("Nano said stop")
+        x.config.send_to_nano("STOPPING")
+        
+        while not 'START' in read.decode('utf-8'):
+            if x.config.check_if_anything():
+                read = x.config.read_from_nano()
+            else:
+                print("not starting")
+                time.sleep(0.5)
+            
+    
+    if (time.time() - prev_sent >= 20):
+        x.L76X_Gat_GNRMC()
 
-    data = {
-        "Status" : x.Status,
-        "Time_H" : x.Time_H,
-        "Time_M" : x.Time_M,
-        "Time_S" : x.Time_S,
-        "Lon" : x.Lon,
-        "Lat" : x.Lat,
-        "Lon Baidu" : x.Lon_Baidu,
-        "Lat Baidu" : x.Lat_Baidu,
-        "Lon Google" : x.Lon_Google,
-        "Lat Google" : x.Lat_Google
-        }
-    
-    if(x.Status == 1):
-        print ('Already positioned')
-    else:
-        print ('No positioning')
-    
-    # print ('Time %d: %d : %d'%(x.Time_H,x.Time_M,x.Time_S))
-    # print ('Lon = %f  Lat = %f'%(x.Lon,x.Lat))
-    # x.L76X_Baidu_Coordinates(x.Lat, x.Lon)
-    # print ('Baidu coordinate %f ,%f'%(x.Lat_Baidu,x.Lon_Baidu))
-    # x.L76X_Google_Coordinates(x.Lat,x.Lon)
-    # print ('Google coordinate %f ,%f'%(x.Lon_Google,x.Lat_Google))
-    x.config.send_to_nano(data)
-    time.sleep(5)
+        data = {
+            "Status" : x.Status,
+            "Time_H" : x.Time_H,
+            "Time_M" : x.Time_M,
+            "Time_S" : x.Time_S,
+            "Lon" : x.Lon,
+            "Lat" : x.Lat,
+            "Lon Baidu" : x.Lon_Baidu,
+            "Lat Baidu" : x.Lat_Baidu,
+            "Lon Google" : x.Lon_Google,
+            "Lat Google" : x.Lat_Google
+            }
+        
+        if(x.Status == 1):
+            print ('Already positioned')
+        else:
+            print ('No positioning')
+        
+        x.config.send_to_nano(data)
+        prev_sent = time.time()
 

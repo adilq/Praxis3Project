@@ -30,7 +30,7 @@ class Connection(object):
 
     # Connect the RP2040 to the Nina W102 uBlox module's onboard ESP32 chip via SPI connections
     spi = busio.SPI(board.SCK1, board.MOSI1, board.MISO1)
-    esp = adafruit_esp32spi.ESP_SPIcontrol(spi, esp32_cs, esp32_ready, esp32_reset)
+    esp = adafruit_esp32spi.ESP_SPIcontrol(spi, esp32_cs, esp32_ready, esp32_reset, debug = 2)
 
     mqtt_client = None
 
@@ -42,8 +42,10 @@ class Connection(object):
         print("Firmware vers.", self.esp.firmware_version)
         print("MAC addr:", [hex(i) for i in self.esp.MAC_address])
 
+
         # Print SSIDs for all discovered networks and their signal strengths
         for ap in self.esp.scan_networks():
+            print("hello")
             print("\t%s\t\tRSSI: %d" % (str(ap['ssid'], 'utf-8'), ap['rssi']))
 
         self.try_connect()
