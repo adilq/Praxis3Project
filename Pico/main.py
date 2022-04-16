@@ -5,6 +5,8 @@ import l76x
 import time
 import math
 
+TRACKER_ID: 1
+
 x=l76x.L76X()
 x.L76X_Set_Baudrate(9600)
 
@@ -50,6 +52,7 @@ while(1):
         x.L76X_Gat_GNRMC()
 
         data = {
+            "ID" : TRACKER_ID,
             "Status" : x.Status,
             "Time_H" : x.Time_H,
             "Time_M" : x.Time_M,
