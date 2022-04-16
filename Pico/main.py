@@ -5,7 +5,9 @@ import l76x
 import time
 import math
 
-TRACKER_ID: 1
+TRACKER_ID = 1
+TRACKED_DATA = {TRACKER_ID: []}
+POLLING_PERIOD = int(60 * 0.25) # TODO: Change me to something reasonable
 
 x=l76x.L76X()
 x.L76X_Set_Baudrate(9600)
@@ -48,28 +50,35 @@ while(1):
                 time.sleep(0.5)
             
     
-    if (time.time() - prev_sent >= 20):
+    if (time.time() - prev_sent >= POLLING_PERIOD):
         x.L76X_Gat_GNRMC()
 
-        data = {
-            "ID" : TRACKER_ID,
-            "Status" : x.Status,
-            "Time_H" : x.Time_H,
-            "Time_M" : x.Time_M,
-            "Time_S" : x.Time_S,
-            "Lon" : x.Lon,
-            "Lat" : x.Lat,
-            "Lon Baidu" : x.Lon_Baidu,
-            "Lat Baidu" : x.Lat_Baidu,
-            "Lon Google" : x.Lon_Google,
-            "Lat Google" : x.Lat_Google
-            }
+        TRACKED_DATA[TRACKER_ID].append({
+            "id" : TRACKER_ID,
+            "status" : x.Status,
+            "time" : f"{x.Time_H}: {x.Time_M}:{x.Time_S}",
+            "lon" : x.Lon,
+            "lat" : x.Lat,
+            })
         
         if(x.Status == 1):
             print ('Already positioned')
         else:
             print ('No positioning')
+
+
+        # TODO: Adil: add button handler to post this entire thing
         
         x.config.send_to_nano(data)
         prev_sent = time.time()
+
+
+
+
+
+
+
+
+
+
 
