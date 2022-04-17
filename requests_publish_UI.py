@@ -63,7 +63,7 @@ while True:
                                   'lon': [49.11, 49.12, 49.13],
                                   'lat': [69.21, 69.22, 69.23]}}
         # the `data=` paramter expects a dictionary so lets just dump the inner dict and then everything works.
-        json_data = {'json_dump': json.dumps(cur_data)}
+        json_data = {'json_dump': json.dumps(cur_data['json_dump'])}
 
         # Publish it to UI
         failure_count = 0
