@@ -62,18 +62,16 @@ while True:
                                   'time': ['17:36', '17:36', '17:36'],
                                   'lon': [49.11, 49.12, 49.13],
                                   'lat': [69.21, 69.22, 69.23]}}
-        requests.patch(JSON_PATCH_URL, data={'json_dump': json.dumps(cur_data['json_dump'])}).con
         # the `data=` paramter expects a dictionary so lets just dump the inner dict and then everything works.
+        json_data = {'json_dump': json.dumps(cur_data)}
 
-
-        json_data = {"json_dump" : {"status": [True, True, True], "time": ["17:36", "17:36", "17:36"], "lon": [49.11, 49.12, 49.13], "lat" : [69.21, 69.22, 69.23] }}
         # Publish it to UI
         failure_count = 0
         response = None
-        print("PATCHing data to {0}: {1}".format(JSON_PATCH_URL, json_data))
+        print("PATCHing data to {0}: {1}".format(JSON_PATCH_URL, cur_data))
         while not response:
             try:
-                response = requests.patch(JSON_PATCH_URL, json=json_data)
+                response = requests.patch(JSON_PATCH_URL, data=json_data)
                 failure_count = 0
             except AssertionError as error:
                 print("Request failed, retrying...\n", error)
