@@ -42,19 +42,16 @@ def disconnected(client, userdata, rc):
 def message(client, userdata, msg):
     #print(msg.topic+": "+str(msg.payload))
     print("Message received: " + msg)
-    print(type(msg))
     publish_msg(msg)
 
-# Format message to JSON dict
+# Format message to JSON dict and publish to UI via requests PATCH
 def publish_msg(msg):
     cur_track = {}
-    print("1")
     track_dict = json.loads(msg)
-    print("2")
     for id in track_dict:
         cur_track = json.loads(msg)[id]
         JSON_PATCH_URL = f"https://d62e-128-100-201-39.ngrok.io/api/trackers/{id}/"
-        json_data = {"json_dump" : cur_track}
+        json_data = {"json_dump" : json.dumps(cur_track)}
 
         # Publish it to UI
         failure_count = 0
@@ -62,10 +59,8 @@ def publish_msg(msg):
         print("PATCHing data to {0}: {1}".format(JSON_PATCH_URL, json_data))
         while not response:
             try:
-                print("trying")
                 response = requests.patch(JSON_PATCH_URL, json=json_data)
                 failure_count = 0
-                print("trying2")
             except AssertionError as error:
                 print("Request failed, retrying...\n", error)
                 failure_count += 1
@@ -84,7 +79,7 @@ def publish_msg(msg):
 # Connect to WiFi
 print("Connecting to WiFi...")
 wifi.connect()
-print("Connected!")
+print("Connected to WiFi!")
 
 # Initialize MQTT interface with the esp interface
 MQTT.set_socket(socket, esp)
