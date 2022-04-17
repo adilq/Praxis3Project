@@ -54,8 +54,7 @@ while True:
         lat = -162.24
         long = 79.52
         #json_data = {"cur_loc" : f"SRID=4326;POINT ({lat} {long})"}
-        json_data = {"json_dump" : {"hello": "world"}}
-
+        json_data = {"json_dump" : {"status": [True, True, True], "time": ["17:36", "17:36", "17:36"], "lon": [49.11, 49.12, 49.13], "lat" : [69.21, 69.22, 69.23] }}
         # Publish it to UI
         failure_count = 0
         response = None
