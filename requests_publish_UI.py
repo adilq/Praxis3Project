@@ -35,17 +35,18 @@ print("Connected!")
 # Set up POST request
 socket.set_interface(esp)
 requests.set_socket(socket, esp)
-JSON_PATCH_URL = "http://0022-138-51-92-15.ngrok.io/api/trackers/2/"
+JSON_PATCH_URL = "https://d62e-128-100-201-39.ngrok.io/api/trackers/1/"
+#JSON_PATCH_URL = "http://0022-138-51-92-15.ngrok.io/api/trackers/2/"
 attempts = 3  # Number of attempts to retry each request
 
 # Main block
 prv_refresh_time = 0.0
 while True:
-    # Send a new GPS reading to UI every 5 seconds
-    if (time.monotonic() - prv_refresh_time) > 5:
+    # Send a new GPS reading to UI every 3 seconds
+    if (time.monotonic() - prv_refresh_time) > 3:
         # Receive and format GPS data
-        lat = -158.24
-        long = 64.52
+        lat = -162.24
+        long = 79.52
         json_data = {"cur_loc" : f"SRID=4326;POINT ({lat} {long})"}
 
         # Publish it to UI
@@ -67,7 +68,7 @@ while True:
 
         # Parse out the 'json' key from json_resp dict.
         json_resp = response.json()
-        print("JSON Data received from server:", json_resp['cur_loc'])
+        print("JSON Data received from server:", json_resp)
         print('-'*40)
         response.close()
 
