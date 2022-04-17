@@ -31,6 +31,12 @@ wifi = adafruit_esp32spi_wifimanager.ESPSPI_WiFiManager(esp, secrets)
 print("Connecting to WiFi...")
 wifi.connect()
 print("Connected!")
+# If successfully connected, print IP and try a couple of web tests
+print("Connected to", str(esp.ssid, "utf-8"), "\tRSSI:", esp.rssi)
+print("My IP address is", esp.pretty_ip(esp.ip_address))
+print("IP lookup adafruit.com: %s" %
+esp.pretty_ip(esp.get_host_by_name("adafruit.com")))
+print("Ping google.com: %d ms" % esp.ping("google.com"))
 
 # Set up POST request
 socket.set_interface(esp)
@@ -47,7 +53,8 @@ while True:
         # Receive and format GPS data
         lat = -162.24
         long = 79.52
-        json_data = {"cur_loc" : f"SRID=4326;POINT ({lat} {long})"}
+        #json_data = {"cur_loc" : f"SRID=4326;POINT ({lat} {long})"}
+        json_data = {"json_dump" : {"hello": "world"}}
 
         # Publish it to UI
         failure_count = 0
