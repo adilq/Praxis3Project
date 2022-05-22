@@ -6,7 +6,6 @@ import time
 import math
 
 TRACKER_ID = 1
-TRACKED_DATA = {TRACKER_ID: []}
 POLLING_PERIOD = int(60 * 0.25)  # TODO: Change me to something reasonable
 
 x = l76x.L76X()
@@ -49,16 +48,16 @@ while(1):
                 print("not starting")
                 time.sleep(0.5)
 
+    #send data to nano
     if (time.time() - prev_sent >= POLLING_PERIOD):
         x.L76X_Gat_GNRMC()
 
-        TRACKED_DATA[TRACKER_ID].append({
+        data = {
             "id": TRACKER_ID,
             "status": x.Status,
-            "time": f"{x.Time_H}: {x.Time_M}:{x.Time_S}",
             "lon": x.Lon,
             "lat": x.Lat,
-        })
+        }
 
         if(x.Status == 1):
             print('Already positioned')
@@ -66,6 +65,5 @@ while(1):
             print('No positioning')
 
         # TODO: Adil: add button handler to post this entire thing
-
         x.config.send_to_nano(data)
         prev_sent = time.time()

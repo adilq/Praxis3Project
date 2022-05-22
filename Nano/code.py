@@ -4,6 +4,7 @@ import digitalio
 import time
 import mqtt_publish
 import DataPacket
+import json
 
 #set up LEDs
 onboard_led = digitalio.DigitalInOut(board.LED)
@@ -15,11 +16,6 @@ green_led.direction = digitalio.Direction.OUTPUT
 button = digitalio.DigitalInOut(board.D3)
 button.direction = digitalio.Direction.INPUT
 button.pull = digitalio.Pull.UP
-
-#list of data packet objects
-push = []
-ready = False #debugging
-connection = False
 
 def check_button_state(state):
     '''#check the state of the button
@@ -38,7 +34,7 @@ def check_button_state(state):
 
 #flash both rapidly unitl button is pressed
 def flash_leds():
-    while check_button_state(button.value) == False:
+    for i in range(20):
         green_led.value = not green_led.value
         onboard_led.value = not onboard_led.value
         time.sleep(0.05)
@@ -60,6 +56,25 @@ def start_comm():
     uart.write(convert_2_bin('START'))
     return uart
 
+def reset_to_send():
+    TO_SEND = {TRACKER_ID: { 'status' : [],'time' : [],'lon' : [],'lat' : []}}
+
+def send_to_drone(connection, msg):
+    try:
+        connection.mqtt_client.publish(connection.mqtt_topic, msg)
+        return 1
+    except:
+        connection.esp.reset()
+        connection.reinit()
+        connection.mqtt_client.publish(connection.mqtt_topic, msg)
+        return 0
+
+#list of data packet objects
+push = []
+connection = False
+TRACKER_ID = 1
+TO_SEND = {TRACKER_ID: {'status' : [], 'time' : [], 'lon' : [], 'lat' : []}}
+
 uart = start_comm()
 
 #main loop
@@ -67,6 +82,7 @@ while True:
     ready = True
     data = uart.read()  #read data from Pico
     #data = "{'Hello' : 13012321, 'Status' : 0}" #dummy test code
+    button_state = button.value
     button_state = button.value
     was_pressed = check_button_state(button_state)
     print(83, was_pressed)
@@ -76,13 +92,14 @@ while True:
         #make a new DataPacket object and convert back to dictionary
         pack = DataPacket.Packet(data)
         pack.convert()
-
+        pack.data["time"] = time.time()
         # if there is a position, append data to list.
         # If its the first time, flash both LEDs so that we can see
-        if (pack.data["Status"] == 1) and (len(push) == 0):
-            #flash_leds()
+        if (pack.data["status"] == 1) and (len(push) == 0):
+            flash_leds()
+            TRACKER_ID = pack.data['id'] # save tracker id as global
             push.append(pack)
-        elif (pack.data["Status"] == 1):
+        elif (pack.data["status"] == 1):
             push.append(pack)
 
         print(pack.data)
@@ -94,22 +111,44 @@ while True:
     if was_pressed:
         #establish connection with mqtt broker
         stop_comm(uart)
-        print("96")
 
         if not connection:
             connection = mqtt_publish.Connection()  #this is an object (see mqtt_publish.py)
         elif not connection.esp.is_connected:
             connection.try_connect()
 
+        #go through each sample
         for packet in push:
             if not packet.sent:
                 onboard_led.value = not onboard_led.value  #flash the led
-                msg = str(packet.data)
-                connection.mqtt_client.publish(connection.mqtt_topic, msg)
+                # add data from that sample to the dictionary to be sent
+                # doing this here makes sure we don't send the same data twice
+                print(packet.data['status'])
+                TO_SEND[TRACKER_ID]['status'].append(packet.data['status'])
+                TO_SEND[TRACKER_ID]['time'].append(packet.data['time'])
+                TO_SEND[TRACKER_ID]['lat'].append(packet.data['lat'])
+                TO_SEND[TRACKER_ID]['lon'].append(packet.data['lon'])
                 packet.update_sent()
+
         if len(push) == 0:
             msg = 'Nothing to push'
-            connection.mqtt_client.publish(connection.mqtt_topic, msg)
+            send_to_drone(connection, msg)
+        else:
+            #flash led so that we know its about to push
+            for i in range(3):
+                onboard_led.value = not onboard_led.value
+                time.sleep(0.1)
 
+            msg = json.dumps(TO_SEND)
+            send_to_drone(connection, msg)
+
+
+            #flash slowly so that we know it has been pushed
+            for i in range(3):
+                onboard_led.value = not onboard_led.value
+                time.sleep(0.5)
+
+            push.clear()
+            reset_to_send()
         uart = start_comm()
         onboard_led.value = False

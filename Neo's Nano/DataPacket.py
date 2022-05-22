@@ -22,16 +22,15 @@ class Packet(object):
         if self.data is not None:
             data_string = ''.join([chr(b) for b in self.data])
             data_dict = {}
-
             #turn back into dictionary
-            data_string = data_string.strip("'{}'") # get rid of stuff on outside
             for subString in data_string.split(","):
-                subString = subString.replace("'", "").strip().split(":") #get rid of stuff on outside
+                subString = subString.strip("{} '").split(":")
+                data_dict[subString[0]] = subString[1]
 
-                if subString[0] == 'time':
-                    data_dict[subString[0]] = subString[1].strip() + subString[2].strip() + subString[3].strip()
-                else:
-                    data_dict[subString[0]] = float(subString[1])
+            #format everything in the dictionary properly
+            for key in data_dict.keys():
+                new_key = key.strip("{} '")
+                data_dict[new_key] = float(data_dict.pop(key))
 
             self.data = data_dict
             self.update_type()
